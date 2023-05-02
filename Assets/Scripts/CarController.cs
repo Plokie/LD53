@@ -22,6 +22,7 @@ public class CarController : MonoBehaviour {
     [SerializeField] int maxPackageCount = 20;
     public List<Package> storedPackages = new List<Package>();
     Transform player;
+    PlayerController playerController;
     CinemachineVirtualCamera cvc;
     Follow minimapCamFollow;
     bool isDriving;
@@ -71,12 +72,22 @@ public class CarController : MonoBehaviour {
 
             if(Input.GetKeyUp(KeyCode.Space))
             inputVelocity = inputVelocity * 0.75f;
+
         }
     }
 
     void FixedUpdate() {
 
-        if(isDriving) inputDir = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+        // rb.inertiaTensorRotation = Quaternion.Euler(0,0,0);
+
+        if(isDriving) 
+        {
+            inputDir = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+            if(playerController) {
+                playerController.stamina += 0.0085f;
+                playerController.sliderStamina.value = playerController.stamina;
+            }
+        }
         else inputDir = Vector2.zero;
         
         inputVelocity.y += inputDir.y * Time.fixedDeltaTime * acceleration;
@@ -86,15 +97,9 @@ public class CarController : MonoBehaviour {
         else inputVelocity.x *= resistance.x;
         inputVelocity.x = Mathf.Clamp(inputVelocity.x, -1f, 1f);
 
-        // transform.localRotation = Quaternion.Euler(Vector3.forward * inputVelocity.x);
-        // Quaternion rotation = transform.localRotation;
-        // rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, rotation.eulerAngles.y, 0);
-        // rotation *= Quaternion.Euler(Vector3.forward * inputVelocity.x * tilt.x);
-        // transform.localRotation = rotation;
+        transform.localRotation = Quaternion.Euler(new Vector3(0, transform.localRotation.eulerAngles.y, 0));
 
-        transform.localRotation = Quaternion.Euler(new Vector3(transform.localRotation.eulerAngles.x, transform.localRotation.eulerAngles.y, 0));
-
-        if(Input.GetKey(KeyCode.Space)) {
+        if(Input.GetKey(KeyCode.Space) && isDriving) {
             if(rb.velocity.magnitude > 12) EnableParticles();
             else DisableParticles();
             // inputVelocity.x *= resistance.x;
@@ -104,10 +109,21 @@ public class CarController : MonoBehaviour {
         else {
             DisableParticles();
             transform.Rotate(transform.up * inputVelocity.x * turnForce * inputVelocity.y);
-            rb.velocity = transform.forward * inputVelocity.y * speed;
+
+            Vector3 velocity = (transform.forward * inputVelocity.y * speed);
+            velocity.y = rb.velocity.y;
+            // forwardDir.Set(forwardDir.x, 0, forwardDir.y);
+            // forwardDir.Normalize();
+            // float verticalVelocity = rb.velocity.y;
+
+            // rb.velocity = (forwardDir * inputVelocity.y * speed);
+            // rb.velocity = new Vector3(rb.velocity.x, verticalVelocity, rb.velocity.z);
+
+            rb.AddForce(velocity - rb.velocity, ForceMode.VelocityChange);
+            // rb.AddForce(Vector3.down * 9.81f, ForceMode.Force);
         }
 
-        transform.localRotation = Quaternion.Euler(new Vector3(transform.localRotation.eulerAngles.x, transform.localRotation.eulerAngles.y, inputVelocity.x * tilt.x * inputVelocity.y));
+        transform.localRotation = Quaternion.Euler(new Vector3(0, transform.localRotation.eulerAngles.y, inputVelocity.x * tilt.x * inputVelocity.y));
 
         foreach(Transform wheel in turnWheels) {
             wheel.localRotation = Quaternion.Euler(transform.up * inputVelocity.x * wheelTurnAngle);
@@ -118,6 +134,7 @@ public class CarController : MonoBehaviour {
     public void GetInVehicle(Transform player, CinemachineVirtualCamera cvc) {
         noiseMaker = GetComponent<NoiseMaker>();
         this.player = player;
+        playerController = player.GetComponent<PlayerController>();
         player.gameObject.SetActive(false);
         isDriving = true;
 
@@ -142,7 +159,7 @@ public class CarController : MonoBehaviour {
         minimapCamFollow.target = player;
         
         // player.GetComponent<PlayerController>().UpdateCamOffset();
-        player.GetComponent<PlayerController>().interactionCooldown = 1f;
+        playerController.interactionCooldown = 1f;
         noiseMaker.StopLooping();
         isDriving = false;
     }

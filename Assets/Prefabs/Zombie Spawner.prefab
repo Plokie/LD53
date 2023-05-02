@@ -51,7 +51,7 @@ MonoBehaviour:
   maxNumOfAliveSpawnees: 9
   spawnChance: 0.45
   spawnInIntervals: 1
-  timeBetweenSpawns: 10
+  timeBetweenSpawns: 8.5
   spawnOnStart: 1
   spawnOnStartAmount: 1
   timeBetweenStartSpawns: 1

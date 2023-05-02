@@ -11,21 +11,30 @@ public class Zombie : MonoBehaviour
     public Transform target;
     [SerializeField] LayerMask levelMask;
     [SerializeField] LayerMask obstacleMask;
-    public float viewFrustrumSize = 0.4f;
+    public float viewFrustrumSize = 0.8f;
     public float immediateDetectionRadius = 2;
-    public float viewRadius = 20;
+    public float viewRadius = 30;
     public float reachDistance = 2f;
     NavMeshAgent agent;
     Vector3 lastKnownTargetPosition = Vector3.forward;
     public bool activated = false;
-    float lastWanderTime;
+    [SerializeField] bool drawView;
+    [SerializeField] int drawViewResolution = 100;
+    [SerializeField] MeshFilter viewConeMeshFilter;
+    Mesh viewConeMesh;
+    float lastWanderTime = float.MinValue;
     float idleTime = 20;
     float lastAttackTime;
 
-    void Start() {
+    void Start()
+    {
         agent = GetComponent<NavMeshAgent>();
         agent.updateRotation = false;
         lastKnownTargetPosition = transform.position;
+
+        viewConeMesh = new Mesh {
+            name = "View Cone Mesh"
+        };
     }
 
     void Update() {
@@ -72,7 +81,7 @@ public class Zombie : MonoBehaviour
         if(!activated ) {
             if(Time.time > lastWanderTime+idleTime) {
                 lastWanderTime = Time.time;
-                idleTime = Random.Range(15f, 30f);
+                idleTime = Random.Range(50f, 80f);
                 Vector3 dir = (Random.insideUnitCircle).normalized;
                 dir.z = dir.y; dir.y = 0;
 
@@ -82,6 +91,61 @@ public class Zombie : MonoBehaviour
                     agent.SetDestination(transform.position + (dir*distance));
                 }
             }
+        }
+
+        if(drawView || (playerGameObject && !(target == playerGameObject.transform && IsTargetInView()) && Vector3.Distance(playerGameObject.transform.position, transform.position) < (viewRadius * 1.5f))) {
+            // Gizmos.color = new Color(1, 1, 1, 0.1f);
+
+            List<Vector3> vertices = new List<Vector3>();
+            List<int> indicies = new List<int>();
+
+            Vector3 from = (transform.position + Vector3.up) + (transform.forward * 0.1f);
+            
+            vertices.Add((transform.forward * 0.1f));
+
+            for (int i = 0; i < drawViewResolution; i++)
+            {
+                float angle = ((i / (float)drawViewResolution) - 0.5f) * 180;
+
+                Vector3 direction = new Vector3(Mathf.Sin(Mathf.Deg2Rad * angle), 0, Mathf.Cos(Mathf.Deg2Rad * angle));
+                direction = transform.TransformDirection(direction);
+                direction.y = 0;
+
+                if (Vector3.Dot(direction, transform.forward) > viewFrustrumSize)
+                {
+                    RaycastHit hit;
+                    if (Physics.Raycast(from, direction, out hit, viewRadius, levelMask, QueryTriggerInteraction.Ignore))
+                    {
+                        // Gizmos.DrawRay(transform.position + Vector3.up, direction * (Vector3.Distance(transform.position + Vector3.up, hit.point)));
+                        // Debug.DrawRay(transform.position + Vector3.up, direction * (Vector3.Distance(transform.position + Vector3.up, hit.point)), new Color(1,1,1,0.1f), Time.deltaTime);
+                        vertices.Add((hit.point - transform.position) - Vector3.up);
+                    }
+                    else {
+                        // Gizmos.DrawRay(transform.position + Vector3.up, direction * viewRadius);
+                        // Debug.DrawRay(transform.position + Vector3.up, direction * viewRadius, new Color(1,0,0,0.1f), Time.deltaTime);
+                        vertices.Add((direction * viewRadius));
+                    }
+
+                }
+            }
+
+            viewConeMesh.vertices = vertices.ToArray();
+
+            for (int i = 0; i < vertices.Count-1; i++) {
+                indicies.Add(0);
+                indicies.Add(i);
+                indicies.Add(i+1);
+            }
+            viewConeMesh.triangles = indicies.ToArray();
+
+
+            viewConeMeshFilter.mesh.Clear();
+            viewConeMeshFilter.mesh = viewConeMesh;
+            viewConeMeshFilter.transform.rotation = Quaternion.identity;
+
+        }
+        else {
+            viewConeMeshFilter.mesh.Clear();
         }
     }
     void LateUpdate() {
@@ -144,5 +208,31 @@ public class Zombie : MonoBehaviour
             if(Vector3.Dot(zombieLookDir, dir) > viewFrustrumSize) return true;
             return false;
         }
+    }
+
+    void OnDrawGizmos() {
+
+        
+        // if(drawView) {
+        //     Gizmos.color = new Color(1, 1, 1, 0.1f);
+        //     for (int i = 0; i < drawViewResolution; i++) {
+        //         float angle = ((i / (float)drawViewResolution)-0.5f) * 180;
+        //         Vector3 direction = new Vector3(Mathf.Sin(Mathf.Deg2Rad * angle), 0, Mathf.Cos(Mathf.Deg2Rad * angle));
+        //         direction = transform.TransformDirection(direction);
+
+        //         if(Vector3.Dot(direction, transform.forward) > viewFrustrumSize) {
+        //             RaycastHit hit;
+        //             if(Physics.Raycast(transform.position + Vector3.up, direction, out hit, viewRadius, levelMask, QueryTriggerInteraction.Ignore)) {
+        //                 Gizmos.DrawRay(transform.position + Vector3.up, direction * (Vector3.Distance(transform.position + Vector3.up, hit.point)));
+        //             }
+        //             else {
+        //                 Gizmos.DrawRay(transform.position + Vector3.up, direction * viewRadius);
+        //             }
+
+
+        //         }
+        //     }
+        // }
+        // Gizmos.DrawRay()
     }
 }

@@ -47,11 +47,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] TMPro.TMP_Text interactText;
     [SerializeField] PackageList packageListUI;
     [SerializeField] Slider sliderHp;
-    [SerializeField] Slider sliderStamina;
+    public Slider sliderStamina;
     [SerializeField] Image hurtVignette;
     [SerializeField] GameObject deathScreen;
     [Range(0f,1f)] public float hp = 1;
-    float stamina = 1;
+    [Range(0f,1f)] public float stamina = 1;
     float staminaRecovery = 0;
     AudioSource audioSource;
     float lastFootstepTime;

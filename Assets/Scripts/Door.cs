@@ -20,6 +20,8 @@ public class Door : MonoBehaviour
         deliveriesNeeded--;
         GameData.Instance.deliveredPackages++;
 
+        GetComponent<AudioSource>().Play();
+
         if(deliveriesNeeded > 0) counter.text = "x" + deliveriesNeeded;
         else {
             alert.SetActive(false);
