@@ -145,7 +145,7 @@ public class PlayerController : MonoBehaviour
     }
     void FixedUpdate() {
         if(Input.GetKey(KeyCode.LeftShift) && stamina>0f) walkingType = WalkingType.Sprinting;
-        else if(Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.Tab)) walkingType = WalkingType.Sneaking;
+        else if(Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.Tab) || Input.GetKey(KeyCode.LeftAlt)) walkingType = WalkingType.Sneaking;
         else walkingType = WalkingType.Walking;
 
         float speed = movementSpeed[walkingType];
