@@ -47,9 +47,9 @@ MonoBehaviour:
   type: 1
   prefab: {fileID: 2966356732201548296, guid: 48e721d996d0c0a44802ac0bf4a410d9, type: 3}
   maxDistanceToPlayer: 30
-  minDistanceToPlayer: 150
-  maxNumOfAliveSpawnees: 4
-  spawnChance: 0.4
+  minDistanceToPlayer: 170
+  maxNumOfAliveSpawnees: 9
+  spawnChance: 0.45
   spawnInIntervals: 1
   timeBetweenSpawns: 10
   spawnOnStart: 1

@@ -50,7 +50,7 @@ public class Zombie : MonoBehaviour
                 float dist = Vector3.Distance(transform.position, target.position);
 
                 if(dist < reachDistance) {
-                    if(target.tag == "Player") {
+                    if(target.tag == "Player" && target.gameObject.activeSelf) {
                         if(Time.time > lastAttackTime + 1) {
                             target.GetComponent<PlayerController>().Damage();
                             lastAttackTime = Time.time;
